@@ -345,5 +345,62 @@
     <script src="app.js"></script>
     <!-- Off-screen container used for PNG export. -->
     <div id="pngExportContainer" aria-hidden="true"></div>
+
+    <!-- TEMPORARY THEME TUNER — delete when done -->
+<div id="themeTuner" style="position:fixed;top:10px;left:10px;z-index:99999;background:#fff;border:2px solid #333;padding:10px;font:12px monospace;max-height:90vh;overflow:auto;width:260px;">
+  <div style="font-weight:bold;margin-bottom:8px;">🎨 Theme Tuner</div>
+  <div id="tunerRows"></div>
+  <button id="tunerReset" style="margin-top:8px;width:100%;padding:4px;">Reset</button>
+  <div style="margin-top:8px;font-size:11px;color:#555;">Edit values → copy the final hex list back to your CSS.</div>
+</div>
+<script>
+(function(){
+  var vars = [
+    '--bg-outer','--bg-paper','--color-text','--deep-green',
+    '--coral-red','--leaf-green','--muted-purple','--mustard','--citrus-yellow'
+  ];
+  var root = document.documentElement;
+  var rows = document.getElementById('tunerRows');
+
+  function hexToRgb(hex){
+    hex = hex.replace('#','');
+    if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+    return [parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)];
+  }
+  function rgbToHex(r,g,b){
+    return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();
+  }
+
+  vars.forEach(function(name){
+    var current = getComputedStyle(root).getPropertyValue(name).trim();
+    var rgb = hexToRgb(current);
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
+    row.innerHTML =
+      '<input type="color" data-var="'+name+'" value="'+current+'" style="width:32px;height:24px;padding:0;border:1px solid #ccc;">' +
+      '<input type="text" data-var="'+name+'" value="'+current+'" style="width:78px;font:11px monospace;padding:2px;">' +
+      '<span style="font-size:10px;color:#555;">'+name+'</span>';
+    rows.appendChild(row);
+  });
+
+  rows.addEventListener('input', function(e){
+    var name = e.target.getAttribute('data-var');
+    if(!name) return;
+    var val = e.target.value;
+    if(e.target.type === 'color'){ val = val.toUpperCase(); }
+    if(!/^#[0-9A-Fa-f]{6}$/.test(val)) return;
+    root.style.setProperty(name, val);
+    // sync the sibling input
+    var siblings = rows.querySelectorAll('[data-var="'+name+'"]');
+    siblings.forEach(function(s){ if(s!==e.target) s.value = val; });
+  });
+
+  document.getElementById('tunerReset').onclick = function(){
+    vars.forEach(function(n){ root.style.removeProperty(n); });
+    location.reload();
+  };
+})();
+</script>
+<!-- END TEMPORARY THEME TUNER -->
 </body>
 </html>
